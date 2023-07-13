@@ -56,6 +56,15 @@ def logout_user(request):
     logout(request)
     return redirect('home')
 
+def user_profile(request, pk):
+    user = User.objects.get(pk=pk)
+    rooms = user.room_set.all()
+    room_messages = user.message_set.all()
+    topics = Topic.objects.all()
+    context = { 'user': user, 'rooms': rooms,
+               'room_messages': room_messages, 'topics': topics }
+    return render(request, 'base/profile.html', context)
+
 
 def home(request):
     topic = request.GET.get('q')
