@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .models import Room, Topic
+from .models import Message, Room, Topic
 from .forms import RoomForm
 
 
@@ -74,7 +74,22 @@ def home(request):
 
 def room(request, pk):
     room = Room.objects.get(pk=int(pk))
-    context = {'room': room}
+    room_messages = room.message_set.all().order_by('-created_at')
+    participants = room.participants.all()
+    participant_count = participants.count()
+
+
+    if request .method == 'POST':
+        message = Message.objects.create(
+            user = request.user,
+            room = room,
+            body = request.POST.get('body')
+        )
+        room.participants.add(request.user)
+        return redirect('room', pk=room.id)
+
+    context = { 'room': room, 'room_messages': room_messages,
+               'participants': participants, 'participant_count': participant_count }
     return render(request, 'base/room.html', context)
 
 
@@ -116,7 +131,7 @@ def delete_room(request, pk):
     room = Room.objects.get(pk=pk)
 
     if request.user != room.host:
-        messages.error(request, 'You are not allowed to edit this room!!')
+        messages.error(request, 'You are not allowed to delete this room!!')
         return redirect('home')
     
     if request.method == 'POST':
@@ -124,4 +139,20 @@ def delete_room(request, pk):
         return redirect('home')
     
     context = { 'obj': room }
+    return render(request, 'base/delete_room.html', context)
+
+
+@login_required(login_url='login')
+def delete_message(request, pk):
+    message = Message.objects.get(pk=pk)
+
+    if request.user != message.user:
+        messages.error(request, 'You are not allowed to delete this message!!')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        message.delete()
+        return redirect('home')
+    
+    context = { 'obj': message }
     return render(request, 'base/delete_room.html', context)

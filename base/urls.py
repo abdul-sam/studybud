@@ -10,4 +10,5 @@ urlpatterns = [
     re_path(r'^rooms/new/$', views.new_room, name='new_room'),
     re_path(r'^rooms/(?P<pk>\d+)/edit$', views.update_room, name='edit_room'),
     re_path(r'^rooms/(?P<pk>\d+)/delete$', views.delete_room, name='delete_room'),
+    re_path(r'^delete_message/(?P<pk>\d+)/$', views.delete_message, name='delete_message'),
 ]
